@@ -329,5 +329,65 @@ BEGIN
 END;
 /
 
+
+
+
+
+
+/*
+
+
+----top k highest in root category
+create or replace procedure topk_rootcate (top_k in int, x_month in int) as
+
+  sold_num int;
+  last_num int :=0;
+  top_count int :=0;
+  total_sum int :=0;
+
+  cursor c2 is
+    select root_name, sum(sold_num) as total_sum
+    from (select name, product_count(x_month, name) as sold_num, Find_Root(name) as root_name 
+      from category)
+    group by root_name
+    order by total_sum desc;
+
+  c2_rec c2%rowtype;
+
+begin
+  select total_sum into last_num
+  from (select root_name, sum(sold_num) as total_sum
+      from (select name, product_count(x_month, name) as sold_num, Find_Root(name) as root_name 
+        from category)
+      group by root_name
+      order by total_sum desc)
+  where rownum=1;
+
+
+  open c2;
+
+  loop
+  fetch c2 into c2_rec;
+  exit when c2%notfound;
+  
+  if((last_num=c2_rec.total_sum) and (top_count <= top_k)) then
+    dbms_output.put_line(c2_rec.root_name || ' ' ||c2_rec.total_sum);
+  elsif((last_num<>c2_rec.total_sum) and (top_count <= top_k)) then
+    dbms_output.put_line(c2_rec.root_name || ' ' ||c2_rec.total_sum);
+    top_count := top_count+1;
+    last_num := c2_rec.total_sum;
+  end if;
+
+  end loop;
+
+  close c2;
+
+end;
+/
+
+*/
+
+
+
 commit;
 purge recyclebin;

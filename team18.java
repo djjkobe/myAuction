@@ -5,7 +5,7 @@
 import java.io.Console;
 import java.io.File;
 import java.io.FileNotFoundException;
-//import oracle.sql.*;
+import oracle.sql.*;
 import java.sql.DriverManager;
 import java.sql.*;
 import java.text.DateFormat;
@@ -764,6 +764,7 @@ public class team18 {
 	 * @return the top k highest volume root categories
 	 */
 	public void topRootCategories(int months, int k) {
+		
 		try {
 			Map<String, Integer> map = new HashMap<String, Integer>();
 			List<String> rootCats = getCategories(null);
@@ -772,6 +773,8 @@ public class team18 {
 				List<String> underRoot = new ArrayList<String>(Arrays.asList(root));
 				underRoot.addAll(getChildCategories(root));
 				
+				System.out.println(formatList(underRoot, '\'', ", "));
+
 				// count products sold under root category
 				PreparedStatement s = getPreparedQuery("select count(auction_id) from (" +
 					"select distinct p.auction_id from product p join belongsto b on p.auction_id = b.auction_id " +
@@ -809,6 +812,7 @@ public class team18 {
 			handleSQLException(e);
 		}
 	}
+	
 	
 	
 	
@@ -1035,8 +1039,8 @@ public class team18 {
 			Console console = System.console();
 			System.out.println("\nPlease enter your login information.");
 			username = getUserInput("Username");
-			password = new String(console.readPassword("Password: "));
-
+			//password = new String(console.readPassword("Password: "));
+			password = getUserInput("Password");
 			//checking to make sure the usn/pwd match something in the database
 			ResultSet resultSet;
 			if(type == 2) //Which database to check for the login info
