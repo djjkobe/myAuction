@@ -1,3 +1,5 @@
+--Student name: jid18,spw20
+
 ---drop all tables
 
 drop table OurSysDate cascade constraints;
@@ -91,8 +93,8 @@ drop sequence seq1;
 drop sequence seq2;
 
 
-create sequence seq1 start with 1 increment by 1 nomaxvalue;
-create sequence seq2 start with 1 increment by 1 nomaxvalue;
+create sequence seq1 MINVALUE 0 start with 0 increment by 1 nomaxvalue;
+create sequence seq2 MINVALUE 0 start with 0 increment by 1 nomaxvalue;
 
 -- auto-increment triggers
 CREATE OR REPLACE TRIGGER product_trigger
@@ -123,27 +125,24 @@ insert into customer values('user2', 'pwd', 'user2', '6812 SENSQ', 'user2@1555.c
 insert into customer values('user3', 'pwd', 'user3', '6813 SENSQ', 'user3@1555.com');
 insert into customer values('user4', 'pwd', 'user4', '6814 SENSQ', 'user4@1555.com');
 
-insert into product values(1, 'Database', 'SQL ER-design', 'user0', to_date('04-dec-2012/12:00:00am', 'dd-mm-yyyy/hh:mi:ssam'), 50, 2, 'sold', 'user2', to_date('06-dec-2012/12:00:00am', 'dd-mm-yyyy/hh:mi:ssam'), 53);
-insert into product values(2, '17 inch monitor', '17 inch monitor', 'user0', to_date('06-dec-2012/12:00:00am', 'dd-mm-yyyy/hh:mi:ssam'), 100, 2, 'sold', 'user4', to_date('08-dec-2012/12:00:00am', 'dd-mm-yyyy/hh:mi:ssam'), 110);
-insert into product values(3, 'DELL INSPIRON 1100', 'DELL INSPIRON notebook', 'user0', to_date('07-dec-2012/12:00:00am', 'dd-mm-yyyy/hh:mi:ssam'), 500, 7, 'underauction', null, null, null);
-insert into product values(4, 'Return of the King', 'fantasy', 'user1', to_date('07-dec-2012/12:00:00am', 'dd-mm-yyyy/hh:mi:ssam'), 40, 2, 'sold', 'user2', to_date('09-dec-2012/12:00:00am', 'dd-mm-yyyy/hh:mi:ssam'), 40);
-insert into product values(5, 'The Sorcerer Stone', 'Harry Porter series', 'user1', to_date('08-dec-2012/12:00:00am', 'dd-mm-yyyy/hh:mi:ssam'), 40, 2, 'sold', 'user3', to_date('10-dec-2012/12:00:00am', 'dd-mm-yyyy/hh:mi:ssam'), 40);
-insert into product values(6, 'DELL INSPIRON 1100', 'DELL INSPIRON notebook', 'user1', to_date('09-dec-2012/12:00:00am', 'dd-mm-yyyy/hh:mi:ssam'), 200, 1, 'withdrawn', null, null, null);
-insert into product values(7, 'Advanced Database', 'SQL Transaction index', 'user1', to_date('10-dec-2012/12:00:00am', 'dd-mm-yyyy/hh:mi:ssam'), 50, 2, 'underauction', null, null, null);
-insert into product values(8, 'Another Database', 'SQL ER-design', 'user1', to_date('04-nov-2012/12:00:00am', 'dd-mm-yyyy/hh:mi:ssam'), 50, 2, 'sold', 'user2', to_date('06-nov-2012/12:00:00am', 'dd-mm-yyyy/hh:mi:ssam'), 53);
-insert into product values(9, 'The Sorcerer Stone 2', 'Harry Porter series', 'user1', to_date('08-dec-2012/12:00:00am', 'dd-mm-yyyy/hh:mi:ssam'), 40, 2, 'underauction', null, null, null);
+insert into product values(0, 'Database', 'SQL ER-design', 'user0', to_date('04-apr-2015/12:00:00am', 'dd-mm-yyyy/hh:mi:ssam'), 50, 2, 'sold', 'user2', to_date('06-apr-2015/12:00:00am', 'dd-mm-yyyy/hh:mi:ssam'), 53);
+insert into product values(1, '17 inch monitor', '17 inch monitor', 'user0', to_date('06-apr-2015/12:00:00am', 'dd-mm-yyyy/hh:mi:ssam'), 100, 2, 'sold', 'user4', to_date('08-apr-2015/12:00:00am', 'dd-mm-yyyy/hh:mi:ssam'), 110);
+insert into product values(2, 'DELL INSPIRON 1100', 'DELL INSPIRON notebook', 'user0', to_date('07-apr-2015/12:00:00am', 'dd-mm-yyyy/hh:mi:ssam'), 500, 7, 'underauction', null, null, null);
+insert into product values(3, 'Return of the King', 'fantasy', 'user1', to_date('07-apr-2015/12:00:00am', 'dd-mm-yyyy/hh:mi:ssam'), 40, 2, 'sold', 'user2', to_date('09-apr-2015/12:00:00am', 'dd-mm-yyyy/hh:mi:ssam'), 40);
+insert into product values(4, 'The Sorcerer Stone', 'Harry Porter series', 'user1', to_date('08-apr-2015/12:00:00am', 'dd-mm-yyyy/hh:mi:ssam'), 40, 2, 'sold', 'user3', to_date('10-apr-2015/12:00:00am', 'dd-mm-yyyy/hh:mi:ssam'), 40);
+insert into product values(5, 'DELL INSPIRON 1100', 'DELL INSPIRON notebook', 'user1', to_date('09-apr-2015/12:00:00am', 'dd-mm-yyyy/hh:mi:ssam'), 200, 1, 'withdrawn', null, null, null);
+insert into product values(6, 'Advanced Database', 'SQL Transaction index', 'user1', to_date('10-apr-2015/12:00:00am', 'dd-mm-yyyy/hh:mi:ssam'), 50, 2, 'underauction', null, null, null);
 
-insert into bidlog values(1, 1, 'user2', to_date('04-dec-2012/08:00:00am', 'dd-mm-yyyy/hh:mi:ssam'), 50);
-insert into bidlog values(2, 1, 'user3', to_date('04-dec-2012/09:00:00am', 'dd-mm-yyyy/hh:mi:ssam'), 53);
-insert into bidlog values(3, 1, 'user2', to_date('05-dec-2012/08:00:00am', 'dd-mm-yyyy/hh:mi:ssam'), 60);
-insert into bidlog values(4, 2, 'user4', to_date('06-dec-2012/08:00:00am', 'dd-mm-yyyy/hh:mi:ssam'), 100);
-insert into bidlog values(5, 2, 'user2', to_date('07-dec-2012/08:00:00am', 'dd-mm-yyyy/hh:mi:ssam'), 110);
-insert into bidlog values(6, 2, 'user4', to_date('07-dec-2012/09:00:00am', 'dd-mm-yyyy/hh:mi:ssam'), 120);
-insert into bidlog values(7, 4, 'user2', to_date('07-dec-2012/08:00:00am', 'dd-mm-yyyy/hh:mi:ssam'), 40);
-insert into bidlog values(8, 5, 'user3', to_date('09-dec-2012/08:00:00am', 'dd-mm-yyyy/hh:mi:ssam'), 40);
-insert into bidlog values(9, 7, 'user2', to_date('07-dec-2012/08:00:00am', 'dd-mm-yyyy/hh:mi:ssam'), 55);
-insert into bidlog values(10, 1, 'user2', to_date('07-dec-2012/08:00:00am', 'dd-mm-yyyy/hh:mi:ssam'), 100);
-insert into bidlog values(11, 9, 'user3', to_date('09-dec-2012/08:00:00am', 'dd-mm-yyyy/hh:mi:ssam'), 40);
+insert into bidlog values(0, 0, 'user2', to_date('04-apr-2015/08:00:00am', 'dd-mm-yyyy/hh:mi:ssam'), 50);
+insert into bidlog values(1, 0, 'user3', to_date('04-apr-2015/09:00:00am', 'dd-mm-yyyy/hh:mi:ssam'), 53);
+insert into bidlog values(2, 0, 'user2', to_date('05-apr-2015/08:00:00am', 'dd-mm-yyyy/hh:mi:ssam'), 60);
+insert into bidlog values(3, 1, 'user4', to_date('06-apr-2015/08:00:00am', 'dd-mm-yyyy/hh:mi:ssam'), 100);
+insert into bidlog values(4, 1, 'user2', to_date('07-apr-2015/08:00:00am', 'dd-mm-yyyy/hh:mi:ssam'), 110);
+insert into bidlog values(5, 1, 'user4', to_date('07-apr-2015/09:00:00am', 'dd-mm-yyyy/hh:mi:ssam'), 120);
+insert into bidlog values(6, 3, 'user2', to_date('07-apr-2015/08:00:00am', 'dd-mm-yyyy/hh:mi:ssam'), 40);
+insert into bidlog values(7, 4, 'user3', to_date('09-apr-2015/08:00:00am', 'dd-mm-yyyy/hh:mi:ssam'), 40);
+insert into bidlog values(8, 6, 'user2', to_date('07-apr-2015/08:00:00am', 'dd-mm-yyyy/hh:mi:ssam'), 55);
+
 
 insert into category values('Books', null);
 insert into category values('Textbooks', 'Books');
@@ -158,18 +157,18 @@ insert into category values('Laptops', 'Computer Related');
 insert into category values('Monitors', 'Computer Related');
 insert into category values('Computer books', 'Computer Related');
 
-insert into belongsto values(1, 'Computer Science');
-insert into belongsto values(1, 'Computer books');
-insert into belongsto values(2, 'Monitors');
-insert into belongsto values(3, 'Laptops');
+insert into belongsto values(0, 'Computer Science');
+insert into belongsto values(0, 'Computer books');
+insert into belongsto values(1, 'Monitors');
+insert into belongsto values(2, 'Laptops');
+insert into belongsto values(3, 'Fiction books');
 insert into belongsto values(4, 'Fiction books');
-insert into belongsto values(5, 'Fiction books');
-insert into belongsto values(6, 'Laptops');
-insert into belongsto values(7, 'Computer Science');
-insert into belongsto values(7, 'Computer books');
-insert into belongsto values(8, 'Computer books');
+insert into belongsto values(5, 'Laptops');
+insert into belongsto values(6, 'Computer Science');
+insert into belongsto values(6, 'Computer books');
 
-insert into ourSysDATE values(to_date('01-dec-2011/09:00:00am', 'dd-mm-yyyy/hh:mi:ssam'));
+
+insert into ourSysDATE values(to_date('11-apr-2015/12:00:00am', 'dd-mm-yyyy/hh:mi:ssam'));
 
 commit;
 
@@ -334,58 +333,7 @@ END;
 
 
 
-/*
 
-
-----top k highest in root category
-create or replace procedure topk_rootcate (top_k in int, x_month in int) as
-
-  sold_num int;
-  last_num int :=0;
-  top_count int :=0;
-  total_sum int :=0;
-
-  cursor c2 is
-    select root_name, sum(sold_num) as total_sum
-    from (select name, product_count(x_month, name) as sold_num, Find_Root(name) as root_name 
-      from category)
-    group by root_name
-    order by total_sum desc;
-
-  c2_rec c2%rowtype;
-
-begin
-  select total_sum into last_num
-  from (select root_name, sum(sold_num) as total_sum
-      from (select name, product_count(x_month, name) as sold_num, Find_Root(name) as root_name 
-        from category)
-      group by root_name
-      order by total_sum desc)
-  where rownum=1;
-
-
-  open c2;
-
-  loop
-  fetch c2 into c2_rec;
-  exit when c2%notfound;
-  
-  if((last_num=c2_rec.total_sum) and (top_count <= top_k)) then
-    dbms_output.put_line(c2_rec.root_name || ' ' ||c2_rec.total_sum);
-  elsif((last_num<>c2_rec.total_sum) and (top_count <= top_k)) then
-    dbms_output.put_line(c2_rec.root_name || ' ' ||c2_rec.total_sum);
-    top_count := top_count+1;
-    last_num := c2_rec.total_sum;
-  end if;
-
-  end loop;
-
-  close c2;
-
-end;
-/
-
-*/
 
 
 

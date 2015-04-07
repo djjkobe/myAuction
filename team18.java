@@ -5,8 +5,9 @@
 import java.io.Console;
 import java.io.File;
 import java.io.FileNotFoundException;
+
 import oracle.sql.*;
-import java.sql.DriverManager;
+
 import java.sql.*;
 import java.text.DateFormat;
 import java.text.ParseException;
@@ -24,7 +25,7 @@ public class team18 {
 	
 	public team18() {
 		
-			
+		/*	
 			String username = "jid18";
 			String password = "3885219";
 			
@@ -42,10 +43,31 @@ public class team18 {
 			} catch(SQLException e)  {
 				System.err.println("Error connecting to database: " + e.toString());
 			}
+		*/
+		System.out.println("Welcome to MyAuction!");
+		input = new Scanner(System.in);
+		promptMenu(0);
 		
 	}
 	
-	
+	private static Connection getDBConnection(){
+		String username, password;
+		username = "jid18";
+		password = "3885219";
+		Connection connection = null;
+		try{
+			DriverManager.registerDriver (new oracle.jdbc.driver.OracleDriver());
+			String url = "jdbc:oracle:thin:@class3.cs.pitt.edu:1521:dbclass"; 
+    	    connection = DriverManager.getConnection(url, username, password);   
+    	    System.out.println("connect successful");
+    	}catch(Exception Ex)  {
+    	    System.out.println("Error connecting to database.  Machine Error: " +Ex.toString());
+    	}
+    	return connection;
+    }
+
+
+
 	//main menu
 	public void promptMenu(int menu) {
 		
@@ -295,6 +317,10 @@ public class team18 {
 	 */
 	public void browse() {
 		try {
+
+			connection = getDBConnection();
+        	connection.setAutoCommit(false);
+            connection.setTransactionIsolation(Connection.TRANSACTION_SERIALIZABLE);
 			// traverse through hierarchical categories
 			List<String> cats = null;
 			String chosenCat = null;	//parent category 
@@ -309,6 +335,8 @@ public class team18 {
 				}
 			} while(cats != null);
 			
+			//System.out.println(chosenCat);
+
 			// After reach the leaf category, prompt user for sort method
 			int sort = getUserChoice("\nHow do you want your products sorted by?", Arrays.asList(
 				"Highest bid first",
@@ -326,6 +354,8 @@ public class team18 {
 				query += "name asc";
 			}
 			
+			//select auction_id, name, description, amount from product where status = 'underauction' and auction_id in (select auction_id from belongsto where category = 'Fiction books') 
+
 			// run query
 			ResultSet products = query(query);
 			
@@ -342,6 +372,9 @@ public class team18 {
 			} else {
 				System.out.println("\nNo products found.");
 			}
+
+			connection.commit();
+			connection.close();
 		} catch(SQLException e) {
 			handleSQLException(e);
 		}
@@ -356,6 +389,11 @@ public class team18 {
 	 */
 	public void search(String input1, String input2) {
 		try {
+			connection = getDBConnection();
+			connection.setAutoCommit(false);
+        	connection.setTransactionIsolation(Connection.TRANSACTION_SERIALIZABLE);
+        
+
 			String temp = "";
 			if (input2 != null) {
 				temp = " and upper(description) like upper('%" + input2 + "%')";
@@ -375,6 +413,10 @@ public class team18 {
 			} else {
 				System.out.println("\nNo products found.");
 			}
+
+
+			connection.commit();
+    		connection.close();
 		} catch(SQLException e) {
 			handleSQLException(e);
 		}
@@ -393,6 +435,10 @@ public class team18 {
 	 */
 	public int auctionProduct(String name, String description, Object[] categories, int days, int price) {
 		try {
+			connection = getDBConnection();
+			connection.setAutoCommit(false);
+        	connection.setTransactionIsolation(Connection.TRANSACTION_SERIALIZABLE);
+       		
 			CallableStatement cs = connection.prepareCall("begin put_product(?, ?, ?, ?, ?, ?, ?); end;");
 			cs.registerOutParameter(7, Types.INTEGER);
 			cs.setString(1, name);
@@ -407,6 +453,11 @@ public class team18 {
 			cs.setInt(6, price);
 			cs.execute();
 			
+			cs.close();
+			connection.commit();
+    		connection.close();
+
+
 			return cs.getInt(7);
 		} catch (SQLException e) {
 			handleSQLException(e);
@@ -423,9 +474,11 @@ public class team18 {
 	public void placeBid(int a_id, int bid) {
 		try {
 			// turn of auto commit and lock table for inserts
+			connection = getDBConnection();
 			connection.setAutoCommit(false);
-			Statement locking = connection.createStatement();
-			locking.execute("lock table bidlog in share row exclusive mode");
+			connection.setTransactionIsolation(Connection.TRANSACTION_SERIALIZABLE);
+			//Statement locking = connection.createStatement();
+			//locking.execute("lock table bidlog in share row exclusive mode");
 			
 			// check if our bid is valid
 			CallableStatement cs = connection.prepareCall("{? = call validate_bid(?, ?)}") ;
@@ -449,7 +502,8 @@ public class team18 {
 			
 			// commit inserts and unlock table
 			connection.commit();
-			connection.setAutoCommit(true) ;
+			connection.close();
+			//connection.setAutoCommit(true) ;
 		} catch (SQLException e) {
 			handleSQLException(e);
 		}
@@ -462,6 +516,11 @@ public class team18 {
 	 */
 	public void sellProduct(int auctionID) {
 		try {
+
+			connection = getDBConnection();
+	    	connection.setAutoCommit(false);
+			connection.setTransactionIsolation(Connection.TRANSACTION_SERIALIZABLE);
+
 			//ResultSet resultSet = null, resultSet2 = null, resultSet3 = null ;
 			ResultSet result = query("select count(bidsn) as bids from bidlog where auction_id = " + auctionID);
 			result.next();
@@ -494,6 +553,9 @@ public class team18 {
 					System.out.println("\nWithdrew product " + auctionID + ".");
 				}
 			}
+
+			connection.commit();
+			connection.close();
 		} catch(SQLException e) {
 			handleSQLException(e);
 		}
@@ -515,7 +577,9 @@ public class team18 {
 				"where bidder = 'user0') and p.status = 'underauction') t1 join product on t1.auction_id = product.auction_id " +
 				"group by product.auction_id, product.name, product.description, product.amount order by count(bidder) desc");
 */
-
+			connection = getDBConnection();
+    		connection.setAutoCommit(false);
+    		connection.setTransactionIsolation(Connection.TRANSACTION_SERIALIZABLE);
 
 			String tmpQuery = 	"select distinct product.auction_id as suggested_auction, product.name, product.description, product.amount, count(distinct bidlog.bidder) as num_bid_friends "+
 							  	"from product join bidlog" +
@@ -555,6 +619,9 @@ public class team18 {
 			} else {
 				System.out.println("No suggestions found.");
 			}
+
+			connection.commit();
+			connection.close();
 		} catch(SQLException e) {
 			handleSQLException(e);
 		}
@@ -616,6 +683,11 @@ public class team18 {
 		boolean firstAttempt = true;
 		String prompt = "Username";
 		try {
+
+			connection = getDBConnection();
+			connection.setAutoCommit(false);
+			connection.setTransactionIsolation(Connection.TRANSACTION_SERIALIZABLE);      
+
 			do {
 				if (!firstAttempt) {
 					prompt = "Username already exists! Please enter another";
@@ -642,6 +714,19 @@ public class team18 {
 		statement = getPreparedQuery("insert into " + type + " values (?, ?, ?, ?, ?)");
 		result = query(statement, Arrays.asList(login, password, name, address, email));
 		System.out.println("\nUser successfully added!\n") ;
+		try {
+			connection.commit();
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+        try {
+			connection.close();
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 	
 	
@@ -660,8 +745,20 @@ public class team18 {
 		} while(!isDateValid(date));
 		
 		if(!exit) {
-			queryUpdate(getPreparedQuery("update ourSysDate set c_date = to_date(?, 'dd-mm-yyyy/hh:mi:ssam')"), date);
-			System.out.println("\nDate successfully changed!\n") ;
+			try{
+				connection = getDBConnection();
+				connection.setAutoCommit(false);
+				connection.setTransactionIsolation(Connection.TRANSACTION_SERIALIZABLE);
+				queryUpdate(getPreparedQuery("update ourSysDate set c_date = to_date(?, 'dd-mm-yyyy/hh:mi:ssam')"), date);
+				//System.out.println("\nDate successfully changed!\n") ;
+				connection.commit();
+				connection.close();
+			}catch(Exception Ex){
+				System.out.println("Error running the sample query"+Ex.toString());
+			}finally{
+				System.out.println("Update is executed Successfully.");
+			}
+			
 		}
 	}
 	
@@ -690,6 +787,11 @@ public class team18 {
 	 */
 	public void productStatistics(String customer) {
 		try {
+
+			connection = getDBConnection();
+			connection.setAutoCommit(false);
+			connection.setTransactionIsolation(Connection.TRANSACTION_SERIALIZABLE);
+
 			String query = "select name, status, amount as highest_bid, login, seller from (" +
 				"select p.name, p.status, p.amount, b.bidder as login, p.seller from product p left join bidlog b on p.auction_id = b.auction_id and p.amount = b.amount where p.status = 'underauction' " +
 				"union select name, status, amount, buyer as login, seller from product where status = 'sold')";
@@ -714,6 +816,9 @@ public class team18 {
 				}
 				System.out.printf("%-20s %-20s %15d %-15s\n", result.getString(1), result.getString(2), result.getInt(3), bidder);
 			}
+
+			connection.commit();
+			connection.close();
 		} catch (SQLException e) {
 			handleSQLException(e);
 		}
@@ -728,6 +833,11 @@ public class team18 {
 	 */
 	public void topLeafCategories(int months, int k) {
 		try {
+
+			connection = getDBConnection();
+			connection.setAutoCommit(false);
+			connection.setTransactionIsolation(Connection.TRANSACTION_SERIALIZABLE);
+
 			PreparedStatement s = getPreparedQuery("select c1.name, product_count(?, c1.name) as count from category c1 " +
 				"where not exists (select name from category c2 where c2.parent_category = c1.name) and product_count(?, c1.name) > 0 " +
 				"order by product_count(?, c1.name) desc");
@@ -750,6 +860,9 @@ public class team18 {
 			} else {
 				System.out.println("Sorry, no products are categorized.");
 			}
+			connection.commit();
+			connection.close();
+        
 		} catch (SQLException e) {
 			handleSQLException(e);
 		}
@@ -766,6 +879,10 @@ public class team18 {
 	public void topRootCategories(int months, int k) {
 		
 		try {
+			connection = getDBConnection();
+		    connection.setAutoCommit(false);
+		    connection.setTransactionIsolation(Connection.TRANSACTION_SERIALIZABLE);
+
 			Map<String, Integer> map = new HashMap<String, Integer>();
 			List<String> rootCats = getCategories(null);
 			
@@ -808,6 +925,8 @@ public class team18 {
 			} else {
 				System.out.println("Sorry, no products are categorized.");
 			}
+			connection.commit();
+		    connection.close();
 		} catch (SQLException e) {
 			handleSQLException(e);
 		}
@@ -935,6 +1054,12 @@ public class team18 {
 	 */
 	public void topActiveBidders(int months, int k) {
 		try {
+
+
+			connection = getDBConnection();
+			connection.setAutoCommit(false);
+			connection.setTransactionIsolation(Connection.TRANSACTION_SERIALIZABLE);
+
 			PreparedStatement s = getPreparedQuery("select * from (" +
 				"select login, bid_count(login, ?) as amount from customer where bid_count(login, ?) > 0 order by amount desc) where rownum <= ?");
 			s.setInt(1, months);
@@ -947,6 +1072,8 @@ public class team18 {
 			while (bidders.next()) {
 				System.out.println(bidders.getInt(2) + "\t" + bidders.getString(1));
 			}
+			connection.commit();
+			connection.close();
 		} catch (SQLException e) {
 			handleSQLException(e);
 		}
@@ -961,6 +1088,11 @@ public class team18 {
 	 */
 	public void topActiveBuyers(int months, int k) {
 		try {
+
+			connection = getDBConnection();
+			connection.setAutoCommit(false);
+			connection.setTransactionIsolation(Connection.TRANSACTION_SERIALIZABLE);
+
 			PreparedStatement s = getPreparedQuery("select * from ( select login, buying_amount(login, ?) as amount" +
 				" from customer where buying_amount(login, ?) is not null order by amount desc) where rownum <= ?");
 			s.setInt(1, months);
@@ -973,6 +1105,8 @@ public class team18 {
 			while (buyers.next()) {
 				System.out.println(buyers.getInt(2) + "\t" + buyers.getString(1));
 			}
+			connection.commit();
+			connection.close();
 		} catch (SQLException e) {
 			handleSQLException(e);
 		}
@@ -1035,7 +1169,9 @@ public class team18 {
 	 */
 	public boolean login(int type) {
 		try {
-
+			connection = getDBConnection();
+			connection.setAutoCommit(false);
+			connection.setTransactionIsolation(Connection.TRANSACTION_SERIALIZABLE);
 			Console console = System.console();
 			System.out.println("\nPlease enter your login information.");
 			username = getUserInput("Username");
@@ -1052,9 +1188,10 @@ public class team18 {
 				if(username.equals(resultSet.getString(1)) && password.equals(resultSet.getString(2)))	//password/username combination is found
 					return true ; 
 			}
-			
+			connection.commit();
+			connection.close();
 			return false ; //If there was no match for the username/password, return false
-
+			
 		} catch(SQLException e) {
 			handleSQLException(e);
 			return false;
@@ -1238,6 +1375,7 @@ public class team18 {
 	 * @param prompt descriptive prompt for user input
 	 * @return user's choice
 	 */
+
 	public int getUserChoice(String title, List<String> choices, String prompt) {
 		// print choices
 		System.out.println("\n" + title + "\n" + HR);
