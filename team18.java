@@ -1,4 +1,4 @@
-//package team18.java;
+package team18.java;
 
 //Student name: jid18,spw20
 
@@ -209,10 +209,14 @@ public class team18 {
 					String description = getUserInput("Description (optional)", 30, false);
 					
 					// add valid categories
-					String temp = getUserInput("Categories (separated by a comma)", -1);
+					String temp;
+					int errorCount;
+					List<String> categories = new ArrayList<String>();
+					do{
+					temp = getUserInput("Categories (separated by a comma)", -1);
 					temp = temp.substring(0, 1).toUpperCase() + temp.substring(1) ;
 					List<String> cats = Arrays.asList(temp.trim().split("\\s*,\\s*"));
-					List<String> categories = new ArrayList<String>(cats);
+					categories = new ArrayList<String>(cats);
 					List<String> errors = new ArrayList<String>();
 					for (String cat : cats) {
 					    if (!isLeafCategory(cat)) {
@@ -220,12 +224,14 @@ public class team18 {
 					    	errors.add(cat);
 					    }
 					}
-					int errorCount = errors.size();
+					errorCount = errors.size();
 					if (errorCount == 1) {
 						System.out.println("Sorry, the category '" + errors.get(0) + "' is invalid");
 					} else if (errorCount > 1) {
 						System.out.println("Sorry, the " + errorCount + " categories (" + formatList(errors, '\0', ", ") + ") are invalid.");
 					}
+					}while(errorCount>=1);
+					
 					
 					int days = getUserNumericInput("Number of days for auction");
 					int price = getUserNumericInput("Minimum starting price (optional)", false); // default is 0 
@@ -347,9 +353,10 @@ public class team18 {
 			// construct query string
 			String query = "select auction_id, name, description, amount from product where status = 'underauction' and auction_id in (select auction_id from belongsto where category = '" + chosenCat + "') order by ";
 			if (sort == 1) {
-				query += "amount desc";
+				//System.out.println(sort);
+				query += "amount desc NULLS last";
 			} else if (sort == 2) {
-				query += "amount asc";
+				query += "amount asc NULLS first";
 			} else {
 				query += "name asc";
 			}
@@ -453,11 +460,11 @@ public class team18 {
 			cs.setInt(6, price);
 			cs.execute();
 			
-			cs.close();
+			//cs.close();
 			connection.commit();
-    		connection.close();
+    		//connection.close();
 
-
+			
 			return cs.getInt(7);
 		} catch (SQLException e) {
 			handleSQLException(e);
