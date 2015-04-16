@@ -317,6 +317,35 @@ end;
 /
 
 
+create or replace procedure Suggestion (user_id in Customer.login%type, pointer out sys_refcursor) as
+--define a record type
+begin 
+  open pointer for 
+  select popularity, bid_id, product.name
+  from (
+      select count(auction_id) as popularity, auction_id as bid_id
+      from Bidlog 
+      where bidder in (select bidder as bidding_friend
+              from Bidlog
+              where auction_id in (select auction_id 
+                         from Bidlog
+                         where bidder = user_id))
+      group by auction_id
+      order by popularity desc), product
+  where bid_id = auction_id
+  order by popularity desc;
+end;
+/
+
+
+create or replace procedure DateUpdate (Currentdate in product.status%type) as
+begin 
+  Update oursysdate
+  set c_date = to_date(Currentdate,'dd-mon-yyyy hh24:mi:ss')
+  where rownum = 1;
+end;
+/
+
 -- (b) Create closeAuctions trigger
 -- check if an auction has expired and change its status to 'close'
 CREATE OR REPLACE TRIGGER closeAuctions
