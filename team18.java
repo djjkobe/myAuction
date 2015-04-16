@@ -59,7 +59,7 @@ public class team18 {
 			DriverManager.registerDriver (new oracle.jdbc.driver.OracleDriver());
 			String url = "jdbc:oracle:thin:@class3.cs.pitt.edu:1521:dbclass"; 
     	    connection = DriverManager.getConnection(url, username, password);   
-    	    System.out.println("connect successful");
+    	    //System.out.println("connect successful");
     	}catch(Exception Ex)  {
     	    System.out.println("Error connecting to database.  Machine Error: " +Ex.toString());
     	}
@@ -341,7 +341,7 @@ public class team18 {
 				}
 			} while(cats != null);
 			
-			//System.out.println(chosenCat);
+			 
 
 			// After reach the leaf category, prompt user for sort method
 			int sort = getUserChoice("\nHow do you want your products sorted by?", Arrays.asList(
@@ -573,42 +573,54 @@ public class team18 {
 	 * Prints a list of suggested products to the user if any exist.
 	 */
 	public void suggest() {
+
+		try{
+    		connection = getDBConnection();
+    		connection.setAutoCommit(false);
+    		connection.setTransactionIsolation(Connection.TRANSACTION_SERIALIZABLE);
+    		
+    		String query4 = "call Suggestion(?,?)";
+    		CallableStatement cstmt4 = connection.prepareCall(query4);
+    		//System.out.println(username);
+    		cstmt4.setString(1,username);
+    		cstmt4.registerOutParameter(2,oracle.jdbc.OracleTypes.CURSOR);
+    		cstmt4.executeQuery();
+			ResultSet resultSet = (ResultSet)cstmt4.getObject(2);
+			System.out.printf("%12s","popularity");
+			System.out.printf("%12s","auction_id");
+			System.out.printf("%20s\n","Product_name");
+			System.out.println("--------------------------------------------");
+			while(resultSet.next()){
+				int popularity = resultSet.getInt("popularity");
+				int auction_id = resultSet.getInt("bid_id");
+				String Product_name = resultSet.getString("name");
+				System.out.printf("%12d",popularity);
+				System.out.printf("%12d",auction_id);
+				System.out.printf("%20s \n",Product_name);
+			}
+			connection.commit();
+			connection.close();
+    	}catch(Exception Ex){
+			System.out.println("Error running the sample query"+Ex.toString());	
+		}
+	}
+		/*
 		try {
-/*
-			ResultSet suggestions = query("select product.auction_id, product.name, product.description, product.amount from (" +
-				"select friends.bidder, bids.auction_id from (select distinct bidder from bidlog b1 where not exists (" +
-				"select distinct auction_id from bidlog b2 where bidder = 'user0' and not exists (select distinct bidder, auction_id " +
-				"from bidlog b3 where b1.bidder = b3.bidder and b2.auction_id = b3.auction_id)) and bidder <> 'user0' and (" +
-				"select count(auction_id) from bidlog where bidder = 'user0') > 0) friends join bidlog bids on friends.bidder = bids.bidder " +
-				"join product p on bids.auction_id = p.auction_id where bids.auction_id not in (select distinct auction_id from bidlog " +
-				"where bidder = 'user0') and p.status = 'underauction') t1 join product on t1.auction_id = product.auction_id " +
-				"group by product.auction_id, product.name, product.description, product.amount order by count(bidder) desc");
-*/
+
 			connection = getDBConnection();
     		connection.setAutoCommit(false);
     		connection.setTransactionIsolation(Connection.TRANSACTION_SERIALIZABLE);
-
-			String tmpQuery = 	"select distinct product.auction_id as suggested_auction, product.name, product.description, product.amount, count(distinct bidlog.bidder) as num_bid_friends "+
-							  	"from product join bidlog" +
-							  	"on product.auction_id = bidlog.auction_id" +
-							  	"where status = 'underauction' and bidder in (" +
-							  		"select distinct bidder"+ 
-							  		"from bidlog bl1" +
-							  		"where not exists (" +
-							  			"select distinct auction_id" +
-							  			"where bidder =" + username + "and not exists (" +
-							  				"select distinct bidder" +
-							  				"from bidlog bl2" +
-							  				"where bl1.bidder = bl2.bidder and bl2.auction_id = cust_bidlog.auction_id" +
-							  			")" +
-									")" +
-								") and product.auction_id not in (" +
-									"select distinct auction_id" +
-									"from bidlog" +
-									"where bidder =" + username +
-								")" +
-								"group by product.auction_id, product.name, product.description, product.amount" +
-								"order by count(distinct bidlog.bidder) desc";
+    		//"select auction_id, name from product where seller = '" + username + "' and status = 'closed'"
+    		//System.out.println(username);
+			String tmpQuery ="select product.auction_id, product.name, product.description, product.amount from (" +
+							 	"select friends.bidder, bids.auction_id "+
+							 		"from (select distinct bidder from bidlog b1 where not exists (" +
+							 			"select distinct auction_id from bidlog b2 where bidder ='"+  username + "' and not exists (select distinct bidder, auction_id " +
+					"from bidlog b3 where b1.bidder = b3.bidder and b2.auction_id = b3.auction_id)) and bidder <> '"+ username+"' and (" +
+					"select count(auction_id) from bidlog where bidder = '"+username + "' ) > 0) friends join bidlog bids on friends.bidder = bids.bidder " +
+					"join product p on bids.auction_id = p.auction_id where bids.auction_id not in (select distinct auction_id from bidlog " +
+					"where bidder = '" +username +"' ) and p.status = 'underauction') t1 join product on t1.auction_id = product.auction_id " +
+					"group by product.auction_id, product.name, product.description, product.amount order by count(bidder) desc";
 
 			ResultSet suggestions = query(tmpQuery); 	
 
@@ -621,7 +633,7 @@ public class team18 {
 				
 				// print results
 				while (suggestions.next()) {
-					System.out.printf("%5d %-20s %-30s %10d %10d\n", suggestions.getInt(1), suggestions.getString(2), suggestions.getString(3), suggestions.getInt(4), suggestions.getInt(5));
+					System.out.printf("%5d %-20s %-30s %10d \n", suggestions.getInt(1), suggestions.getString(2), suggestions.getString(3), suggestions.getInt(4));
 				}
 			} else {
 				System.out.println("No suggestions found.");
@@ -632,7 +644,9 @@ public class team18 {
 		} catch(SQLException e) {
 			handleSQLException(e);
 		}
-	}
+		
+		*/
+	
 	/*
 	 * 
 	 * 
@@ -741,31 +755,23 @@ public class team18 {
 	 * Update our system date.
 	 */
 	public void updateDate() {
-		String date;
-		boolean exit = false ;
-		do {
-			date = getUserInput("Please enter a date or 'exit' to exit (must match dd-mm-yyyy/hh:mi:ssam)").toUpperCase();
-			if(date.equals("EXIT")) {
-				exit = true ;
-				break ;
-			}
-		} while(!isDateValid(date));
-		
-		if(!exit) {
-			try{
-				connection = getDBConnection();
-				connection.setAutoCommit(false);
-				connection.setTransactionIsolation(Connection.TRANSACTION_SERIALIZABLE);
-				queryUpdate(getPreparedQuery("update ourSysDate set c_date = to_date(?, 'dd-mm-yyyy/hh:mi:ssam')"), date);
-				//System.out.println("\nDate successfully changed!\n") ;
-				connection.commit();
-				connection.close();
-			}catch(Exception Ex){
-				System.out.println("Error running the sample query"+Ex.toString());
-			}finally{
-				System.out.println("Update is executed Successfully.");
-			}
+		try{
+			connection = getDBConnection();
+			connection.setAutoCommit(false);
+			connection.setTransactionIsolation(Connection.TRANSACTION_SERIALIZABLE);
+			System.out.println("Please enter the time:");
+			String query = "call DateUpdate(?)";
+			String time = getUserInput("dd-MM-yyyy HH:mm:ss ");
 			
+			PreparedStatement cstmt = connection.prepareCall(query);
+			cstmt.setString(1,time);
+			cstmt.executeUpdate();
+			connection.commit();
+			connection.close();
+		}catch(Exception Ex){
+			System.out.println("Error running the sample query"+Ex.toString());
+		}finally{
+			System.out.println("Update is executed Successfully.");
 		}
 	}
 	
@@ -777,7 +783,8 @@ public class team18 {
 	 * @return validity of date string
 	 */
 	private static boolean isDateValid(String date, String format) {
-        try {
+        
+		try {
             DateFormat df = new SimpleDateFormat(format);
             df.setLenient(false);
             df.parse(date);
@@ -1127,11 +1134,12 @@ public class team18 {
 	 * @return validity of date string
 	 */
 	private static boolean isDateValid(String date) {
-		return isDateValid(date, "dd-MM-yyyy/hh:mm:ssa");
+		return isDateValid(date, "dd-mm-yyyy/hh:mm:ss");
 	}
 	
 	
 	/*
+	 * 
 	 * @param e exception
 	 */
 	public void handleSQLException(Exception e) {
@@ -1417,16 +1425,21 @@ public class team18 {
 	 */
 	public boolean isLeafCategory(String category) {
 		try {
+			connection = getDBConnection();
+			connection.setAutoCommit(false);
+			connection.setTransactionIsolation(Connection.TRANSACTION_SERIALIZABLE);
 			category = category.substring(0, 1).toUpperCase() + category.substring(1) ;
 			PreparedStatement s = getPreparedQuery("select count(name) from category where name = ? or parent_category = ?");
 			ResultSet r = query(s, Arrays.asList(category, category));
 			r.next();
-			
-			if (r.getInt(1) == 1) {
+			connection.commit();
+			//connection.close();
+			if (r.getInt(1)==1) {
 				return true;
 			} else {
 				return false;
 			}
+			
 		} catch (SQLException e) {
 			handleSQLException(e);
 			return false;
@@ -1438,3 +1451,4 @@ public class team18 {
 		team18 test = new team18();
 	}
 }
+
