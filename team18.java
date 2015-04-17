@@ -252,6 +252,9 @@ public class team18 {
 				case 5:
 					// Sell product
 					try {
+						connection = getDBConnection();
+			        	connection.setAutoCommit(false);
+			            connection.setTransactionIsolation(Connection.TRANSACTION_SERIALIZABLE);
 						ResultSet myProducts = query("select auction_id, name from product where seller = '" + username + "' and status = 'closed'");
 						if (myProducts != null) {
 							List<Integer> ids = new ArrayList<Integer>();
@@ -260,11 +263,15 @@ public class team18 {
 								ids.add(myProducts.getInt(1));
 								products.add(myProducts.getString(2) + " (#" + myProducts.getInt(1) + ")");
 							}
+							connection.commit();
+							connection.close();
 							int userChoice = getUserChoice("Your closed auctions", products, "Please enter the product you would like to sell");
 							sellProduct(ids.get(userChoice - 1));
 						} else {
 							System.out.println("You currently do not have any closed auctions.");
 						}
+						//connection.commit();
+						//connection.close();
 					} catch (SQLException e) {
 						handleSQLException(e);
 					}
@@ -696,19 +703,20 @@ public class team18 {
 		name = getUserInput("Name", 10) ;
 		address = getUserInput("Address", 30) ;
 		email = getUserInput("Email Address", 20) ;
-		
+		PreparedStatement statement;
+		ResultSet result;
 		// make sure username doesn't already exist
 		login = "";
-		PreparedStatement statement = getPreparedQuery("select count(login) from customer where login = ?");
-		ResultSet result = null;
-		boolean firstAttempt = true;
-		String prompt = "Username";
+		
 		try {
 
 			connection = getDBConnection();
 			connection.setAutoCommit(false);
 			connection.setTransactionIsolation(Connection.TRANSACTION_SERIALIZABLE);      
-
+			statement = getPreparedQuery("select count(login) from customer where login = ?");
+			result = null;
+			boolean firstAttempt = true;
+			String prompt = "Username";
 			do {
 				if (!firstAttempt) {
 					prompt = "Username already exists! Please enter another";
@@ -768,10 +776,10 @@ public class team18 {
 			cstmt.executeUpdate();
 			connection.commit();
 			connection.close();
+			System.out.println("Update successful!");
 		}catch(Exception Ex){
 			System.out.println("Error running the sample query"+Ex.toString());
-		}finally{
-			System.out.println("Update is executed Successfully.");
+			System.out.println("You have to try again!");
 		}
 	}
 	
